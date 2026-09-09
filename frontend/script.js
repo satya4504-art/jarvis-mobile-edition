@@ -65,7 +65,7 @@ async function askGemini(p){
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 if(SR){
     const rec = new SR();
-    rec.lang = 'en-US';'te-IN';
+    rec.lang = 'te-IN';
     rec.continuous = false;
     rec.interimResults = false;
     
