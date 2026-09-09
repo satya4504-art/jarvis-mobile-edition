@@ -102,7 +102,7 @@ if(SR){
 
   const rec = new SR();
 
-  rec.lang = 'en-US';
+  rec.lang = 'te-IN';
   rec.continuous = false;
   rec.interimResults = false;
 
