@@ -1,74 +1,253 @@
-// ===== 1. API KEY (Safe: browser р░▓р▒Л р░ор░╛р░др▒Нр░░р░ор▒З) =====
+// ===== 1. API KEY (Safe: browser లో మాత్రమే) =====
 let API_KEY = localStorage.getItem('jarvis_key');
+
 if(!API_KEY){
   API_KEY = prompt('Enter your Gemini API Key:');
   if(API_KEY) localStorage.setItem('jarvis_key', API_KEY);
 }
 
-// ===== 2. SMART MODELS (р░Тр░Хр░Яр░┐ fail р░Ер░пр░┐р░др▒З next auto try) =====
+
+// ===== 2. SMART MODELS =====
 const MODELS = ["gemini-3.6-flash", "gemini-flash-latest"];
 
-const chat=document.getElementById('chat');
-const input=document.getElementById('msg');
-const micBtn=document.getElementById('mic-btn');
+const chat = document.getElementById('chat');
+const input = document.getElementById('msg');
+const micBtn = document.getElementById('mic-btn');
 
-// ===== 3. GEMINI BRAIN (auto-fallback) =====
+
+// ===== 3. GEMINI BRAIN =====
 async function callGemini(p){
   let lastErr;
+
   for(const m of MODELS){
     try{
-      const res=await fetch(
-        "https://generativelanguage.googleapis.com/v1beta/models/"+m+":generateContent?key="+API_KEY,
-        {method:"POST",headers:{"Content-Type":"application/json"},
-         body:JSON.stringify({contents:[{parts:[{text:p}]}]})});
-      const data=await res.json();
+      const res = await fetch(
+        "https://generativelanguage.googleapis.com/v1beta/models/" +
+        m +
+        ":generateContent?key=" +
+        API_KEY,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [
+                  {
+                    text:
+                      "You are J.A.R.V.I.S., a friendly, motivational and inspirational AI assistant. " +
+                      "Speak naturally, warmly and confidently. " +
+                      "Keep your answers clear and easy to understand. " +
+                      "Encourage the user when appropriate. " +
+                      "Do not sound robotic or overly formal.\n\n" +
+                      p
+                  }
+                ]
+              }
+            ]
+          })
+        }
+      );
+
+      const data = await res.json();
+
       if(data.error){
-        lastErr=new Error(data.error.message);
-        if(/high demand|temporar|quota|rate|unavailable|no longer available|deprecated/i.test(data.error.message)) continue;
+        lastErr = new Error(data.error.message);
+
+        if(
+          /high demand|temporar|quota|rate|unavailable|no longer available|deprecated/i
+          .test(data.error.message)
+        ){
+          continue;
+        }
+
         throw lastErr;
       }
+
       return data.candidates[0].content.parts[0].text;
-    }catch(e){ lastErr=e; }
+
+    }catch(e){
+      lastErr = e;
+    }
   }
+
   throw lastErr;
 }
 
+
 async function askGemini(p){
-  add('J.A.R.V.I.S: Thinking...','ai');
+  add('J.A.R.V.I.S: Thinking...', 'ai');
+
   try{
-    const reply=await callGemini(p);
-    chat.lastChild.innerText='J.A.R.V.I.S: '+reply;
-    speak(reply); // reply р░╡р░Ър▒Нр░Ър░┐р░и р░╡р▒Жр░Вр░Яр░ир▒З VOICE
+    const reply = await callGemini(p);
+
+    chat.lastChild.innerText = 'J.A.R.V.I.S: ' + reply;
+
+    // Speak the reply
+    speak(reply);
+
   }catch(e){
-    chat.lastChild.innerText='J.A.R.V.I.S: ERROR - '+e.message;
+    chat.lastChild.innerText =
+      'J.A.R.V.I.S: ERROR - ' + e.message;
   }
 }
 
-// ===== 4. SPEECH RECOGNITION (р░╡р░┐р░ир░бр░В) =====
-const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-const rec=new SR(); rec.lang='te-IN'; // Telugu р░Хр░┐ 'te-IN'
-rec.onresult=(e)=>{const t=e.results[0][0].transcript;add('YOU: '+t,'user');askGemini(t);};
-micBtn.onclick=()=>{rec.start();micBtn.innerText='LISTENING...';};
-rec.onend=()=>{micBtn.innerText='ЁЯОЩя╕П';};
 
-// ===== 5. TEXT-TO-SPEECH (р░ор░╛р░Яр▒Нр░▓р░╛р░бр░Яр░В) =====
-let voices=[];
-function loadVoices(){ voices=speechSynthesis.getVoices(); }
+// ===== 4. SPEECH RECOGNITION =====
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+if(SR){
+
+  const rec = new SR();
+
+  rec.lang = 'en-US';
+  rec.continuous = false;
+  rec.interimResults = false;
+
+  rec.onresult = (e) => {
+    const t = e.results[0][0].transcript;
+
+    add('YOU: ' + t, 'user');
+
+    askGemini(t);
+  };
+
+  micBtn.onclick = () => {
+    try{
+      speechSynthesis.cancel();
+
+      rec.start();
+
+      micBtn.innerText = 'LISTENING...';
+
+    }catch(e){
+      console.log(e);
+    }
+  };
+
+  rec.onend = () => {
+    micBtn.innerText = '🎙️';
+  };
+
+}else{
+
+  micBtn.onclick = () => {
+    alert('Speech Recognition is not supported in this browser.');
+  };
+
+}
+
+
+// ===== 5. FRIENDLY + MOTIVATIONAL TEXT-TO-SPEECH =====
+
+let voices = [];
+
+function loadVoices(){
+  voices = speechSynthesis.getVoices();
+}
+
 loadVoices();
-speechSynthesis.onvoiceschanged=loadVoices;
 
-function speak(t){
-  const u=new SpeechSynthesisUtterance(t);
-  u.rate=1.05; u.pitch=0.85;
-  const v=voices.find(v=>v.lang.startsWith('en'));
-  if(v) u.voice=v;
+speechSynthesis.onvoiceschanged = loadVoices;
+
+
+// Find a natural English voice
+function getBestVoice(){
+
+  // Preferred voices
+  const preferredNames = [
+    'Google US English',
+    'Google UK English Female',
+    'Microsoft Jenny',
+    'Microsoft Aria',
+    'Microsoft Guy',
+    'Microsoft Ryan',
+    'Samantha',
+    'Alex'
+  ];
+
+  // First try preferred voices
+  for(const name of preferredNames){
+
+    const found = voices.find(v =>
+      v.name.toLowerCase().includes(name.toLowerCase()) &&
+      v.lang.toLowerCase().startsWith('en')
+    );
+
+    if(found){
+      return found;
+    }
+  }
+
+  // Otherwise use any English voice
+  return voices.find(v =>
+    v.lang.toLowerCase().startsWith('en-us')
+  ) ||
+  voices.find(v =>
+    v.lang.toLowerCase().startsWith('en')
+  );
+}
+
+
+function speak(text){
+
+  // Stop previous speech
+  speechSynthesis.cancel();
+
+  const u = new SpeechSynthesisUtterance(text);
+
+  // ===== FRIENDLY / MOTIVATIONAL SETTINGS =====
+
+  // Natural speaking speed
+  u.rate = 0.95;
+
+  // Warm, confident voice
+  u.pitch = 1.05;
+
+  // Slightly louder
+  u.volume = 1.0;
+
+  // Select best available English voice
+  const voice = getBestVoice();
+
+  if(voice){
+    u.voice = voice;
+  }
+
+  // Speak
   speechSynthesis.speak(u);
 }
 
+
 // ===== 6. TEXT SEND BUTTON =====
-document.getElementById('send').onclick=()=>{
-  const t=input.value.trim(); if(!t)return;
-  add('YOU: '+t,'user'); input.value=''; askGemini(t);
+
+document.getElementById('send').onclick = () => {
+
+  const t = input.value.trim();
+
+  if(!t) return;
+
+  add('YOU: ' + t, 'user');
+
+  input.value = '';
+
+  askGemini(t);
 };
 
-function add(t,w){const d=document.createElement('div');d.className='msg '+w;d.innerText=t;chat.appendChild(d);chat.scrollTop=chat.scrollHeight;}
+
+// ===== 7. ADD MESSAGE =====
+
+function add(t, w){
+
+  const d = document.createElement('div');
+
+  d.className = 'msg ' + w;
+
+  d.innerText = t;
+
+  chat.appendChild(d);
+
+  chat.scrollTop = chat.scrollHeight;
+}
