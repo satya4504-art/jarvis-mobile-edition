@@ -6,7 +6,7 @@
     <title>J.A.R.V.I.S. Assistant Console</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
             max-width: 700px;
             margin: 30px auto;
             padding: 20px;
@@ -172,10 +172,8 @@
                 return 'Searching YouTube for ' + q + ', Boss.'; 
             }
         }
-        
         return null; // Tool match కాకపోతే Gemini Brain కి వెళ్తుంది
     }
-
     // ===== 4. GEMINI BRAIN (MEMORY & TOOL INTEGRATED) ===== 
     async function callGemini(p){ 
         const contents = MEMORY.slice(-12).map(m => ({role: m.role, parts: [{text: m.text}]})); 
@@ -199,7 +197,6 @@
         } 
         throw lastErr; 
     } 
-
     async function processInput(p) {
         add('YOU: ' + p, 'user');
         
