@@ -3,113 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Assistant Tools</title>
+    <title>J.A.R.V.I.S. Assistant Console</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            max-width: 600px;
-            margin: 40px auto;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 700px;
+            margin: 30px auto;
             padding: 20px;
-            background-color: #f4f4f9;
-            color: #333;
+            background-color: #0d1117;
+            color: #c9d1d9;
         }
-        h2 { color: #2c3e50; }
-        .card {
-            background: white;
-            padding: 20px;
+        h2 { color: #58a6ff; text-align: center; }
+        .chat-container {
+            background: #161b22;
+            border: 1px solid #30363d;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
+            height: 400px;
+            overflow-y: auto;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .msg {
+            padding: 10px 14px;
+            border-radius: 6px;
+            max-width: 80%;
+            word-wrap: break-word;
+            line-height: 1.4;
+        }
+        .msg.user {
+            background: #1f6feb;
+            color: white;
+            align-self: flex-end;
+        }
+        .msg.ai {
+            background: #21262d;
+            border: 1px solid #30363d;
+            color: #c9d1d9;
+            align-self: flex-start;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
         }
         input[type="text"] {
-            width: 70%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            flex: 1;
+            padding: 12px;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            color: white;
+            border-radius: 6px;
+            font-size: 14px;
         }
         button {
-            padding: 10px 15px;
-            background-color: #3498db;
+            padding: 10px 16px;
+            background-color: #238636;
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
-            margin: 5px 2px;
+            font-weight: bold;
         }
-        button:hover { background-color: #2980b9; }
-        #output {
-            margin-top: 15px;
-            padding: 10px;
-            background: #eef2f3;
-            border-left: 4px solid #3498db;
-            white-space: pre-wrap;
-            min-height: 40px;
+        button:hover { background-color: #2ea043; }
+        .secondary-btn {
+            background-color: #30363d;
         }
-        .preset-buttons { margin-top: 10px; }
+        .secondary-btn:hover { background-color: #484f58; }
+        .utility-bar {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+        }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h2>AI Assistant Tools Console</h2>
-        <p>Type a command or use the preset buttons below:</p>
-        
-        <input type="text" id="commandInput" placeholder="e.g., time, weather, play lofi...">
-        <button onclick="processCommand()">Send</button>
+    <h2>J.A.R.V.I.S. Command Terminal</h2>
+    
+    <div id="chat" class="chat-container"></div>
 
-        <div class="preset-buttons">
-            <p><strong>Quick Test Presets:</strong></p>
-            <button onclick="runTest('time')">Time</button>
-            <button onclick="runTest('weather')">Weather</button>
-            <button onclick="runTest('set timer for 5 seconds')">Timer (5s)</button>
-            <button onclick="runTest('translate hello world')">Translate</button>
-            <button onclick="runTest('play telugu songs')">YouTube</button>
-        </div>
+    <div class="controls">
+        <input type="text" id="msg" placeholder="Ask J.A.R.V.I.S. or give a tool command (e.g. time, weather, timer)...">
+        <button id="send">Send</button>
+        <button id="mic-btn" class="secondary-btn" title="Voice Input">🎙️</button>
+    </div>
 
-        <h3>Output:</h3>
-        <div id="output">Results will appear here...</div>
+    <div class="utility-bar">
+        <button id="cam-btn" class="secondary-btn">📷 Vision Upload</button>
+        <button id="clear-btn" class="secondary-btn" style="background-color: #da3633;">Clear Memory</button>
+        <input type="file" id="img-input" accept="image/*" style="display: none;">
     </div>
 
 <script>
-    // Dummy speech synthesis function to prevent errors
-    function speak(text) {
-        if ('speechSynthesis' in window) {
-            const utterance = new SpeechSynthesisUtterance(text);
-            window.speechSynthesis.speak(utterance);
-        } else {
-            console.log("Speech synthesis not supported.");
-        }
-    }
+    // ===== 1. API KEY & SMART MODELS ===== 
+    let API_KEY = localStorage.getItem('jarvis_key'); 
+    if(!API_KEY) { 
+        API_KEY = prompt('Enter your Gemini API Key:'); 
+        if(API_KEY) localStorage.setItem('jarvis_key', API_KEY); 
+    } 
+    const MODELS = ["gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-flash-latest"];
+
+    // ===== 2. MEMORY SYSTEM ===== 
+    let MEMORY = JSON.parse(localStorage.getItem('jarvis_memory') || '[]'); 
+    function saveMemory(){ 
+        localStorage.setItem('jarvis_memory', JSON.stringify(MEMORY)); 
+    } 
+    
+    const chat = document.getElementById('chat'); 
+    const input = document.getElementById('msg'); 
+    const micBtn = document.getElementById('mic-btn'); 
+    const clearBtn = document.getElementById('clear-btn'); 
+    const camBtn = document.getElementById('cam-btn'); 
+    const imgInput = document.getElementById('img-input'); 
+
+    MEMORY.forEach(m => add((m.role === 'user' ? 'YOU: ' : 'J.A.R.V.I.S: ') + m.text, m.role === 'user' ? 'user' : 'ai')); 
 
     // ===== 3. TOOLS (THE HANDS) — 15 TOOLS =====
     async function handleTools(text) {
         const t = text.toLowerCase();
         
         // 1. Time
-        if (/\btime\b/.test(t) || t.includes('టైమ్') || t.includes('సమయం '))
+        if(/\btime\b/.test(t) || t.includes('టైమ్') || t.includes('సమయం '))
             return 'The time is ' + new Date().toLocaleTimeString() + ', Boss.';
         
         // 2. Weather
-        if (t.includes('weather') || t.includes('వాతావరణం ')) {
+        if(t.includes('weather') || t.includes('వాతావరణం ')) {
             return await new Promise(res => {
-                if (!navigator.geolocation) {
-                    return res('Geolocation is not supported by your browser, Boss.');
-                }
+                if (!navigator.geolocation) return res('Geolocation is not supported, Boss.');
                 navigator.geolocation.getCurrentPosition(async p => {
                     try {
                         const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.coords.latitude}&longitude=${p.coords.longitude}&current_weather=true`);
                         const d = await r.json();
                         res(`It is ${d.current_weather.temperature} degrees Celsius now, Boss.`);
-                    } catch (e) { 
-                        res('Weather service error, Boss.'); 
-                    }
+                    } catch(e) { res('Weather service error, Boss.'); }
                 }, () => res('I need location permission for weather, Boss.'));
             });
         }
         
         // 3. Timer
         const m = t.match(/(\d+)\s*(seconds?|secs?|minutes?|mins?|hours?|hrs?)/i);
-        if ((t.includes('timer') || t.includes('టైమర్')) && m) {
+        if((t.includes('timer') || t.includes('టైమర్')) && m) {
             const amount = parseInt(m[1]); 
             const unit = m[2].toLowerCase();
             const factor = /^(hours?|hrs?|h)/.test(unit) ? 3600000 : /^(seconds?|secs?|s)/.test(unit) ? 1000 : 60000;
@@ -119,21 +155,19 @@
         }
         
         // 4. Translate
-        if (t.includes('translate')) {
+        if(t.includes('translate')) {
             const q = text.replace(/translate (this )?/i, '').trim() || 'hello';
             try {
                 const r = await fetch('https://api.mymemory.translated.net/get?q=' + encodeURIComponent(q) + '&langpair=en|te');
                 const d = await r.json(); 
                 return 'In Telugu: ' + d.responseData.translatedText;
-            } catch (e) { 
-                return 'Translate error, Boss.'; 
-            }
+            } catch(e) { return 'Translate error, Boss.'; }
         }
         
         // 5. YouTube Play
-        if (t.includes('play ') || t.includes('youtube ')) {
+        if(t.includes('play ') || t.includes('youtube ')) {
             const q = text.replace(/play |youtube (search )?/i, '').trim();
-            if (q) { 
+            if(q) { 
                 window.open('https://www.youtube.com/results?search_query=' + encodeURIComponent(q), '_blank');
                 return 'Searching YouTube for ' + q + ', Boss.'; 
             }
@@ -142,26 +176,158 @@
         return null; // Tool match కాకపోతే Gemini Brain కి వెళ్తుంది
     }
 
-    // UI Helper Functions
-    async function processCommand() {
-        const input = document.getElementById('commandInput').value;
-        const outputDiv = document.getElementById('output');
+    // ===== 4. GEMINI BRAIN (MEMORY & TOOL INTEGRATED) ===== 
+    async function callGemini(p){ 
+        const contents = MEMORY.slice(-12).map(m => ({role: m.role, parts: [{text: m.text}]})); 
+        contents.push({role: 'user', parts: [{text: p}]}); 
+        let lastErr; 
+        for(const m of MODELS){ 
+            try { 
+                const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + m + ":generateContent?key=" + API_KEY, {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({contents: contents})
+                }); 
+                const data = await res.json(); 
+                if(data.error){ 
+                    lastErr = new Error(data.error.message); 
+                    if(/high demand|temporar|quota|rate|unavailable|deprecated/i.test(data.error.message)) continue; 
+                    throw lastErr; 
+                } 
+                return data.candidates[0].content.parts[0].text; 
+            } catch(e) { lastErr = e; } 
+        } 
+        throw lastErr; 
+    } 
+
+    async function processInput(p) {
+        add('YOU: ' + p, 'user');
         
-        if (!input.trim()) return;
-        
-        outputDiv.innerText = "Processing...";
-        const result = await handleTools(input);
-        
-        if (result === null) {
-            outputDiv.innerText = "Tool match కాకపోతే Gemini Brain కి వెళ్తుంది (No tool matched).";
-        } else {
-            outputDiv.innerText = result;
+        // Check Tools First
+        const toolResult = await handleTools(p);
+        if (toolResult !== null) {
+            add('J.A.R.V.I.S: ' + toolResult, 'ai');
+            speak(toolResult);
+            MEMORY.push({role: 'user', text: p});
+            MEMORY.push({role: 'model', text: toolResult});
+            saveMemory();
+            return;
         }
+
+        // Otherwise, send to Gemini Brain
+        add('J.A.R.V.I.S: Thinking...', 'ai'); 
+        try { 
+            const reply = await callGemini(p); 
+            MEMORY.push({role: 'user', text: p}); 
+            MEMORY.push({role: 'model', text: reply}); 
+            saveMemory(); 
+            chat.lastChild.innerText = 'J.A.R.V.I.S: ' + reply; 
+            speak(reply); 
+        } catch(e) { 
+            chat.lastChild.innerText = 'J.A.R.V.I.S: ERROR - ' + e.message; 
+        } 
     }
 
-    async function runTest(cmd) {
-        document.getElementById('commandInput').value = cmd;
-        await processCommand();
+    // ===== 5. VISION ENGINE (EYES) ===== 
+    if(camBtn && imgInput){ 
+        camBtn.onclick = () => imgInput.click(); 
+        imgInput.onchange = () => { 
+            const file = imgInput.files[0]; 
+            if(!file) return; 
+            const reader = new FileReader(); 
+            reader.onload = () => { 
+                const base64 = reader.result.split(',')[1]; 
+                const q = input.value.trim() || 'What do you see? Describe briefly.'; 
+                add('YOU: [IMAGE] ' + q, 'user'); 
+                input.value = ''; 
+                askVision(base64, file.type, q); 
+            }; 
+            reader.readAsDataURL(file); 
+        }; 
+    } 
+
+    async function askVision(base64, mime, q){ 
+        add('J.A.R.V.I.S: Analyzing image...', 'ai'); 
+        let lastErr; 
+        for(const m of MODELS){ 
+            try { 
+                const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + m + ":generateContent?key=" + API_KEY, {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"}, 
+                    body: JSON.stringify({
+                        contents: [{parts: [{text: q}, {inline_data: {mime_type: mime, data: base64}}]}]
+                    })
+                }); 
+                const data = await res.json(); 
+                if(data.error){ 
+                    lastErr = new Error(data.error.message); 
+                    if(/high demand|temporar|quota|rate|unavailable|deprecated/i.test(data.error.message)) continue; 
+                    throw lastErr; 
+                } 
+                const reply = data.candidates[0].content.parts[0].text; 
+                chat.lastChild.innerText = 'J.A.R.V.I.S: ' + reply; 
+                speak(reply); 
+                return; 
+            } catch(e) { lastErr = e; } 
+        } 
+        chat.lastChild.innerText = 'J.A.R.V.I.S: ERROR - ' + lastErr.message; 
+    } 
+
+    // ===== 6. VOICE & UTILS ===== 
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition; 
+    if(SR && micBtn){ 
+        const rec = new SR(); 
+        rec.lang = 'en-US'; 
+        rec.onresult = (e) => {
+            const t = e.results[0][0].transcript;
+            processInput(t);
+        }; 
+        micBtn.onclick = () => { rec.start(); micBtn.innerText = 'LISTENING...'; }; 
+        rec.onend = () => { micBtn.innerText = '🎙️'; }; 
+    } 
+
+    let voices = []; 
+    function loadVoices(){ voices = speechSynthesis.getVoices(); } 
+    loadVoices(); 
+    speechSynthesis.onvoiceschanged = loadVoices; 
+    
+    function speak(t){ 
+        const u = new SpeechSynthesisUtterance(t); 
+        u.rate = 1.05; 
+        u.pitch = 0.85; 
+        const v = voices.find(v => v.lang.startsWith('en')); 
+        if(v) u.voice = v; 
+        speechSynthesis.speak(u); 
+    } 
+
+    document.getElementById('send').onclick = () => { 
+        const t = input.value.trim(); 
+        if(!t) return; 
+        input.value = ''; 
+        processInput(t); 
+    }; 
+    
+    input.onkeypress = (e) => {
+        if(e.key === 'Enter') {
+            document.getElementById('send').click();
+        }
+    };
+
+    if(clearBtn){ 
+        clearBtn.onclick = () => { 
+            MEMORY = []; 
+            saveMemory(); 
+            chat.innerHTML = ''; 
+            add('SYSTEM: Memory cleared.', 'ai'); 
+        }; 
+    } 
+
+    function add(t, w){
+        const d = document.createElement('div');
+        d.className = 'msg ' + w;
+        d.innerText = t;
+        chat.appendChild(d);
+        chat.scrollTop = chat.scrollHeight;
     }
 </script>
 
