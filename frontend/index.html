@@ -1,45 +1,312 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>J.A.R.V.I.S</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
+<!DOCTYPE html> 
+<html lang="en"> 
+<head> 
+    <meta charset="UTF-8"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <title>J.A.R.V.I.S</title> 
+    <style>
+        :root {
+            --neon-blue: #00f3ff;
+            --dark-bg: #050b14;
+            --panel-bg: rgba(0, 243, 255, 0.05);
+            --border-color: rgba(0, 243, 255, 0.3);
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--neon-blue);
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            width: 100%;
+            max-width: 600px;
+            padding-bottom: 10px;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2rem;
+            letter-spacing: 4px;
+            text-shadow: 0 0 10px var(--neon-blue);
+        }
+
+        header p {
+            margin: 5px 0 0;
+            font-size: 0.8rem;
+            opacity: 0.7;
+            letter-spacing: 2px;
+        }
+
+        /* Arc Reactor Core Animation */
+        .core {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 15px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ring {
+            position: absolute;
+            border: 2px dashed var(--neon-blue);
+            border-radius: 50%;
+            animation: spin 10s linear infinite;
+        }
+
+        .ring.r1 {
+            width: 100%;
+            height: 100%;
+            border-color: var(--neon-blue);
+            opacity: 0.6;
+        }
+
+        .ring.r2 {
+            width: 80px;
+            height: 80px;
+            border-color: #fff;
+            animation-direction: reverse;
+            animation-duration: 6s;
+            opacity: 0.4;
+        }
+
+        .center {
+            width: 40px;
+            height: 40px;
+            background: var(--neon-blue);
+            border-radius: 50%;
+            box-shadow: 0 0 20px var(--neon-blue), inset 0 0 10px #fff;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(0.9); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; }
+        }
+
+        .core-text {
+            text-align: center;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 5px var(--neon-blue);
+        }
+
+        /* Status Panel */
+        .status {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 20px;
+            box-shadow: inset 0 0 15px rgba(0, 243, 255, 0.1);
+        }
+
+        .status h2 {
+            font-size: 1rem;
+            margin-top: 0;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+            letter-spacing: 1px;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            margin: 8px 0;
+        }
+
+        .on {
+            color: #00ff66;
+            text-shadow: 0 0 5px #00ff66;
+        }
+
+        /* Chat History Box */
+        .chat {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border-color);
+            width: 100%;
+            max-width: 600px;
+            height: 150px;
+            overflow-y: auto;
+            padding: 10px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+            font-size: 0.85rem;
+        }
+
+        .chat-msg {
+            margin-bottom: 8px;
+        }
+
+        .chat-msg.user {
+            color: #fff;
+        }
+
+        .chat-msg.jarvis {
+            color: var(--neon-blue);
+        }
+
+        /* Input Controls Area */
+        .input-area {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        input[type="text"], input#msg {
+            flex: 1;
+            background: rgba(0, 243, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--neon-blue);
+            padding: 10px;
+            font-family: inherit;
+            outline: none;
+        }
+
+        input#msg::placeholder {
+            color: rgba(0, 243, 255, 0.4);
+        }
+
+        button {
+            background: rgba(0, 243, 255, 0.1);
+            border: 1px solid var(--neon-blue);
+            color: var(--neon-blue);
+            padding: 10px 15px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: var(--neon-blue);
+            color: var(--dark-bg);
+            box-shadow: 0 0 10px var(--neon-blue);
+        }
+    </style>
+</head> 
+<body> 
     <header>
         <h1>J.A.R.V.I.S</h1>
         <p>PERSONAL AI ASSISTANT</p>
-    </header>
-    
-    <div class="core">
-        <div class="ring r1"></div>
-        <div class="ring r2"></div>
-        <div class="center"></div>
-    </div>
-    
-    <p class="core-text">SYSTEM READY</p>
-    
-    <div class="status">
-        <h2>SYSTEM DIAGNOSTICS</h2>
+    </header> 
+
+    <div class="core"> 
+        <div class="ring r1"></div> 
+        <div class="ring r2"></div> 
+        <div class="center"></div> 
+    </div> 
+
+    <p class="core-text">SYSTEM READY</p> 
+
+    <div class="status"> 
+        <h2>SYSTEM DIAGNOSTICS</h2> 
         <div class="row"><span>AI ENGINE</span><b class="on">● OPERATIONAL</b></div>
-        <div class="row"><span>CONNECTION</span><b class="on">● ONLINE</b></div>
-        <div class="row"><span>VOICE INTERFACE</span><b class="on">● READY</b></div>
-        <div class="row"><span>LONG-TERM MEMORY</span><b class="on">● ACTIVE</b></div>
-    </div>
-    
-    <div class="chat" id="chat"></div>
-    
-    <div class="input-area">
-        <input id="msg" placeholder="Enter a command for J.A.R.V.I.S...">
-        <button id="send">EXECUTE</button>
-        <button id="mic-btn" aria-label="Activate voice input">🎙</button>
-        <button id="cam-btn" aria-label="Analyze image">📷</button>
-        <button id="clear-btn">CLEAR MEMORY</button>
-        <input id="img-input" type="file" accept="image/*" style="display:none">
-    </div>
-    
-    <script src="script.js"></script>
-</body>
+        <div class="row"><span>CONNECTION</span><b class="on">● ONLINE</b></div> 
+        <div class="row"><span>VOICE INTERFACE</span><b class="on">● READY</b></div> 
+        <div class="row"><span>LONG-TERM MEMORY</span><b class="on">● ACTIVE</b></div> 
+    </div> 
+
+    <div class="chat" id="chat">
+        <div class="chat-msg jarvis">J.A.R.V.I.S: Online and awaiting your command, Sir.</div>
+    </div> 
+
+    <div class="input-area"> 
+        <input id="msg" placeholder="Enter a command for J.A.R.V.I.S..."> 
+        <button id="send">EXECUTE</button> 
+        <button id="mic-btn" aria-label="Activate voice input">🎙️</button> 
+        <button id="cam-btn" aria-label="Analyze image">📷</button> 
+        <button id="clear-btn">CLEAR</button> 
+        <input id="img-input" type="file" accept="image/*" style="display:none"> 
+    </div> 
+
+    <script>
+        const chatBox = document.getElementById('chat');
+        const msgInput = document.getElementById('msg');
+        const sendBtn = document.getElementById('send');
+        const clearBtn = document.getElementById('clear-btn');
+        const micBtn = document.getElementById('mic-btn');
+        const camBtn = document.getElementById('cam-btn');
+        const imgInput = document.getElementById('img-input');
+
+        function appendMessage(sender, text, className) {
+            const div = document.createElement('div');
+            div.className = `chat-msg ${className}`;
+            div.textContent = `${sender}: ${text}`;
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function handleCommand() {
+            const text = msgInput.value.trim();
+            if (!text) return;
+
+            appendMessage('USER', text, 'user');
+            msgInput.value = '';
+
+            // Simulate J.A.R.V.I.S. responses
+            setTimeout(() => {
+                let reply = "Command processed successfully, Sir.";
+                const lower = text.toLowerCase();
+                if (lower.includes('hello') || lower.includes('hi')) {
+                    reply = "Good day, Sir. All systems are operating at peak capacity.";
+                } else if (lower.includes('status')) {
+                    reply = "All primary diagnostics check out green. No anomalies detected.";
+                } else if (lower.includes('time')) {
+                    reply = `The current system time is ${new Date().toLocaleTimeString()}.`;
+                }
+                appendMessage('J.A.R.V.I.S', reply, 'jarvis');
+            }, 500);
+        }
+
+        sendBtn.addEventListener('click', handleCommand);
+        msgInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleCommand();
+        });
+
+        clearBtn.addEventListener('click', () => {
+            chatBox.innerHTML = '<div class="chat-msg jarvis">J.A.R.V.I.S: Memory cleared, Sir.</div>';
+        });
+
+        micBtn.addEventListener('click', () => {
+            appendMessage('J.A.R.V.I.S', 'Voice interface active. Listening...', 'jarvis');
+        });
+
+        camBtn.addEventListener('click', () => {
+            imgInput.click();
+        });
+
+        imgInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                appendMessage('USER', `[Uploaded Image: ${e.target.files[0].name}]`, 'user');
+                setTimeout(() => {
+                    appendMessage('J.A.R.V.I.S', 'Visual analysis complete. Image processed.', 'jarvis');
+                }, 800);
+            }
+        });
+    </script> 
+</body> 
 </html>
 
