@@ -117,7 +117,7 @@
                 <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
                 <span>SYSTEM ONLINE</span>
             </div>
-            <div>MODEL: <span id="current-model-label" class="text-white font-bold">gemini-2.5-flash</span></div>
+            <div>MODEL: <span id="current-model-label" class="text-white font-bold">gemini-3.6-flash</span></div>
             <div>MEMORY: <span id="memory-count" class="text-white font-bold">0</span> ENTRIES</div>
         </div>
 
