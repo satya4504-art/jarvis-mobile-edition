@@ -38,7 +38,7 @@ async function requestGeminiInteraction(input, systemInstruction = GEMINI_SYSTEM
   if (!reply) throw new Error(data?.status === 'failed' ? 'Gemini could not complete this request.' : 'Gemini returned an empty response.');
   return reply;
 }
-const GEMINI_MODEL = 'gemini-3.8-flash';
+const GEMINI_MODEL = 'gemini-3.6-flash';
 const GEMINI_SYSTEM_INSTRUCTION = 'You are J.A.R.V.I.S, a friendly personal assistant for Vamshi. Reply naturally in a warm Telugu-English mix, using clear concise language. If you do not know, say so plainly.';
 
 // ===== 2. MEMORY =====
